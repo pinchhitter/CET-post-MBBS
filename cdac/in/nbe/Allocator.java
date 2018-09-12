@@ -26,6 +26,7 @@ public class Allocator{
 	static double PwDCuttOff = 353.00;
 	static double OBCSCSTCuttOff = 334.00;
 
+
 	Allocator(){
 
 		candidates = new ArrayList<Candidate>();
@@ -141,7 +142,7 @@ public class Allocator{
 				String []token = line.trim().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
 				String applicantId = token[0].trim();
 				String dob = token[1].trim();
-				String categoryId = token[2].trim();
+				String categoryId = token[2].trim() ;
 				String isPwD = token[3].trim();
 				String gender = token[4].trim();
 				double score = Double.parseDouble( token[5].trim() );
@@ -173,6 +174,8 @@ public class Allocator{
 		if( quota == null)
 			return false;
 		if( quota.name.equals("UR") )
+			return true;
+		if( quota.name.equals( candidate.category ) )
 			return true;
 		if( quota.name.equals("PWD") && candidate.isPwD )
 			return true;

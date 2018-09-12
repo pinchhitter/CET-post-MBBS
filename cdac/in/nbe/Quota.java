@@ -16,14 +16,18 @@ class Quota{
 	Integer superNumeri;
 	double closingRank;  
 	double openingRank;  
+	boolean isSpecial;
+	boolean isPwD;	
 	List<Candidate> candidates;
 
-	Quota(String name, Integer size){
+	Quota(String name, Integer size, boolean isSpecial, boolean isPwD){
 		this.name = name;
 		this.size = size;
 		this.allocated = 0;
 		this.superNumeri = 0;
 		this.closingRank = 0;
+		this.isSpecial = isSpecial;	
+		this.isPwD = isPwD;	
 		this.candidates = new ArrayList<Candidate>();
 	}
 	

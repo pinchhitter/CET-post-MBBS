@@ -117,7 +117,7 @@ public class Allocator{
 				totalSeats=totalSeats+Integer.parseInt(total);
 			}
 			System.err.println("Total Courses Read: "+(count));
-			printCourse();
+			//printCourse();
 
 		}catch(Exception e){
 			System.err.println("Course File reading error at "+count+"line");
@@ -191,7 +191,11 @@ public class Allocator{
 				return true;
 			}else if( quota.name.equals("OBCWo") && candidate.category.equals("OBC") ){
 				return true;
-			}
+			}else if( quota.name.equals("BCAWo") && candidate.specialCategory != null && candidate.specialCategory.equals("BCA") ){
+                                return true;
+                        }else if( quota.name.equals("BCBWo") && candidate.specialCategory != null && candidate.specialCategory.equals("BCB") ){
+                                return true;
+                        }
 		}
 		return false;	
 	}	
@@ -213,6 +217,8 @@ public class Allocator{
 					candidate.isAllocated = true;
 					candidate.allocatedChoice = number;
 					candidate.allocatedQuota = quota;
+					candidate.isSpecialQuotaAllocated = quota.isSpecial;
+					candidate.isPwDQuotaAllocated = quota.isPwD;
 					candidate.allocatedCourse = course;
 					quota.allocate(candidate);
 					course.allocated++;
@@ -233,6 +239,8 @@ public class Allocator{
 				candidate.isAllocated = true;
 				candidate.allocatedChoice = number;
 				candidate.allocatedQuota = quota;
+				candidate.isSpecialQuotaAllocated = quota.isSpecial;
+				candidate.isPwDQuotaAllocated = quota.isPwD;
 				candidate.allocatedCourse = course;
 				quota.allocate( candidate );	
 				course.allocated++;
@@ -605,7 +613,7 @@ public class Allocator{
 			System.out.println("Total Seats: "+totalSeats);
 			System.out.println("Total Allocated: "+allocated);
 			
-			allocator.print();
+			//allocator.print();
 			
 			
 			

@@ -25,20 +25,22 @@ class Course{
 		this.totalSeat = totalSeat;
 		this.quotas = new LinkedHashMap<String, Quota>();
 		
-		this.quotas.put("UR", new Quota("UR", UR) );
-		this.quotas.put("OBC", new Quota("OBC", OBC) );
-		this.quotas.put("SC", new Quota("SC", SC) );
-		this.quotas.put("ST", new Quota("ST", ST) );
-		this.quotas.put("URWo", new Quota("URWo", URWo) );
-		this.quotas.put("PWD", new Quota("PWD", PWD) );
-		this.quotas.put("PWDWo", new Quota("PWDWo", PWDWo) );
-		this.quotas.put("STWo", new Quota("STWo", STWo) );
-		this.quotas.put("OBC-A", new Quota("OBC-A", OBCA) );
-		this.quotas.put("OBC-B", new Quota("OBC-B", OBCB) );
-		this.quotas.put("BC", new Quota("BC", BC) );
-		this.quotas.put("BCA", new Quota("BCA", BCA) );
-		this.quotas.put("SCA", new Quota("SCA", SCA) );
-		this.quotas.put("BCBWo", new Quota("BCBWo", BCBWo) );
+		this.quotas.put("UR", new Quota("UR", UR, false, false) );
+		this.quotas.put("OBC", new Quota("OBC", OBC, false, false) );
+		this.quotas.put("SC", new Quota("SC", SC, false, false) );
+		this.quotas.put("ST", new Quota("ST", ST, false, false) );
+
+		this.quotas.put("PWD", new Quota("PWD", PWD, false, true) );
+
+		this.quotas.put("URWo", new Quota("URWo", URWo, true, false) );
+		this.quotas.put("PWDWo", new Quota("PWDWo", PWDWo, true, false) );
+		this.quotas.put("STWo", new Quota("STWo", STWo, true, false) );
+		this.quotas.put("OBC-A", new Quota("OBC-A", OBCA, true, false) );
+		this.quotas.put("OBC-B", new Quota("OBC-B", OBCB, true, false) );
+		this.quotas.put("BC", new Quota("BC", BC, true, false) );
+		this.quotas.put("BCA", new Quota("BCA", BCA, true, false) );
+		this.quotas.put("SCA", new Quota("SCA", SCA, true, false) );
+		this.quotas.put("BCBWo", new Quota("BCBWo", BCBWo, true, false) );
 	}
 	
 	public int getQuotaPriority(String quota)

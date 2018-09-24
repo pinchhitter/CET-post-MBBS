@@ -96,7 +96,7 @@ class Course{
 	void headerCourseSeatMatrix(){
 		System.out.print("Hospital Id, Hospital Name And Address, State, speciality code, speciality, Total Seat, TotalAccepted");
 		for(String key: quotas.keySet() ){
-			System.out.print(", "+key+"-Opening, "+key+"-Closing");
+			System.out.print(", "+key+"-AvilableSeat");
 
 		}	
 		System.out.println();	
@@ -114,7 +114,6 @@ class Course{
 		System.out.print(hospitalId +", "+ hospitalNameAddress.replaceAll(",", "")+", "+stateId+", "+specialityCode+", "+speciality+", "+totalSeat+", "+allocated);
 		for(String key: quotas.keySet() ){
 			System.out.print(", "+quotas.get( key ).getRemainingSeat() );
-
 		}	
 		System.out.println();	
 	}

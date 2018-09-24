@@ -47,11 +47,11 @@ public class Allocator{
 		priority.add("BCA");
 		priority.add("SCA");
 		priority.add("BCBWo");
-			
+
 		lastRoundAllocation = new HashMap<>();
 		allocated = 0;
 		totalSeats = 0;
-		
+
 		quotaPriority = new HashMap<>();
 		quotaPriority.put("UR", 1);
 		quotaPriority.put("URWo", 2);
@@ -69,7 +69,7 @@ public class Allocator{
 		quotaPriority.put("BCBWo", 8);
 
 	}
-	
+
 	void readCourses(String filename, boolean header){
 
 		BufferedReader br = null; 
@@ -195,10 +195,10 @@ public class Allocator{
 			}else if( quota.name.equals("OBCWo") && candidate.category.equals("OBC") ){
 				return true;
 			}else if( quota.name.equals("BCAWo") && candidate.specialCategory != null && candidate.specialCategory.equals("BCA") ){
-                                return true;
-                        }else if( quota.name.equals("BCBWo") && candidate.specialCategory != null && candidate.specialCategory.equals("BCB") ){
-                                return true;
-                        }
+				return true;
+			}else if( quota.name.equals("BCBWo") && candidate.specialCategory != null && candidate.specialCategory.equals("BCB") ){
+				return true;
+			}
 		}
 		return false;	
 	}	
@@ -211,9 +211,9 @@ public class Allocator{
 			if( candidate.isAllocated ){
 
 				int allocatedQuotaPriority = course.getQuotaPriority(candidate.allocatedQuota.name);
-                        	int newQuotaPriority = course.getQuotaPriority(quota.name);
+				int newQuotaPriority = course.getQuotaPriority( quota.name );
 
-				if( (!course.equals(candidate.allocatedCourse) || newQuotaPriority < allocatedQuotaPriority) ){
+				if(  (!course.equals(candidate.allocatedCourse) || newQuotaPriority < allocatedQuotaPriority) ){
 
 					candidate.allocatedQuota.free(candidate);
 					candidate.allocatedCourse.allocated--;
@@ -225,8 +225,9 @@ public class Allocator{
 					candidate.allocatedCourse = course;
 					quota.allocate(candidate);
 					course.allocated++;
-					
-					Course lastRoundCourse = lastRoundAllocation.get(candidate.applicationId);
+
+					Course lastRoundCourse = lastRoundAllocation.get( candidate.applicationId );
+
 					if (lastRoundCourse != null && lastRoundCourse.courseId.equals(course.courseId)) {
 						candidate.setStatusId(4);
 						candidate.setActionId(3);
@@ -234,6 +235,7 @@ public class Allocator{
 						candidate.setStatusId(3);
 						candidate.setActionId(3);
 					}
+
 					return true;
 				}else{
 					return false;
@@ -252,7 +254,7 @@ public class Allocator{
 				return true;
 			}
 		}
-	return false;
+		return false;
 	}
 
 	boolean allocate(Candidate candidate, Course course, Integer number){
@@ -265,42 +267,41 @@ public class Allocator{
 				}
 			}
 		}
-	return false;
+		return false;
 	}
-	
+
 	boolean isValidMarks(Candidate candidate){
-	
+
 		if ( candidate.category.equals("OBC") || candidate.category.equals("SC") || candidate.category.equals("ST") ){
 			if( candidate.score < OBCSCSTCuttOff ){
 				return false;
 			}
 		}else if ( candidate.isPwD && candidate.score < PwDCuttOff ){
-				return false;
+			return false;
 		}else if( candidate.score < URCuttOff){
 			return false;
 		}
-	return true;
+		return true;
 	}
 
 	boolean allocate(Candidate candidate){
 
-		if( !isValidMarks(candidate ) ){
-			System.err.println(candidate.applicationId+", "+candidate.score+" NO enough to Qualify "+candidate.category+", "+candidate.isPwD+", "+candidate.score);
+		if( ! isValidMarks(candidate ) ){
 			return false;
 		}
-		
+
 		boolean allocated = false;
 		int lastChoiceNumber=0;
 
 		Integer allocatedChoiceNumber = candidate.allocatedChoice;
-			
+
 		if(allocatedChoiceNumber == null || allocatedChoiceNumber == 0) {
 			lastChoiceNumber = candidate.choices.size();
 		}else{
 			lastChoiceNumber = allocatedChoiceNumber;
 		}
 
-		
+
 		for (int number = 1; number <= lastChoiceNumber; number++) {
 
 			String courseId = candidate.choices.get( number );
@@ -319,15 +320,13 @@ public class Allocator{
 				noFoundCourses.put(courseId.trim(), count);
 			}
 		}
-		
-	return allocated;
+
+		return allocated;
 	}
-	
-	
+
+
 	private void lastRound(String filename, boolean header) {
 
-		// TODO Auto-generated method stub
-	
 		BufferedReader br = null; 
 		int count = 0;
 		try{
@@ -338,26 +337,23 @@ public class Allocator{
 					header = false;
 					continue;
 				}
-				//application_id,dob,category_id,is_pwd,gender,seat_preference,status_id,has_opted_special_cat,opted_special_cat_id
-				//application_id,dob,category_id,is_pwd,gender,score,air,seat_preference,status_id,has_opted_special_cat,opted_special_cat_id
-				String []token = line.trim().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
 				//application_id,seat_allotted,quota,choice_no,round,action_id
-				String allocatedApplicationId= token[0];
+				String []token = line.trim().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
+				String allocatedApplicationId = token[0];
 				String allocatedSeat= token[1];
 				String allocatedQuota= token[2];
+
 				try{
 
-				Candidate allocatedCandidate = candidates.stream().filter(candidate ->candidate.applicationId.equals(allocatedApplicationId)). findFirst().get();
-				
-				Course course = courses.get( allocatedSeat );
-				Quota quota = course.quotas.get(allocatedQuota);
-				Integer choiceNo = allocatedCandidate.choices.entrySet().stream().filter(entry -> Objects.equals(entry.getValue(), allocatedSeat)).map(Map.Entry::getKey).findFirst().get();
-
-				allocate(allocatedCandidate,course,quota,choiceNo);
-				allocatedCandidate.setStatusId(4);
-				allocatedCandidate.setActionId(3);
-				lastRoundAllocation.put(allocatedApplicationId, course);
-				count++;
+					Candidate allocatedCandidate = candidates.stream().filter(candidate ->candidate.applicationId.equals(allocatedApplicationId)). findFirst().get();
+					Course course = courses.get( allocatedSeat );
+					Quota quota = course.quotas.get( allocatedQuota );
+					Integer choiceNo = allocatedCandidate.choices.entrySet().stream().filter(entry -> Objects.equals(entry.getValue(), allocatedSeat)).map(Map.Entry::getKey).findFirst().get();
+					allocate(allocatedCandidate,course,quota,choiceNo);
+					allocatedCandidate.setStatusId(4);
+					allocatedCandidate.setActionId(3);
+					lastRoundAllocation.put(allocatedApplicationId, course);
+					count++;
 				}
 				catch(Exception e){
 					e.printStackTrace();
@@ -377,6 +373,8 @@ public class Allocator{
 		boolean allocation= true;
 		int iteration = 0;
 		for (int i = 0; i < candidates.size(); i++) {
+
+
 			allocate( candidates.get(i) );
 		}
 		for(String course: noFoundCourses.keySet() ){
@@ -384,18 +382,18 @@ public class Allocator{
 		}
 	}
 
-	
+
 	void allocattionVerification(){
-			
+
 		for(Candidate candidate: candidates){
 			Integer allocatedChoice = candidate.allocatedChoice;
 			if(allocatedChoice  == null){
 				verifiyChoices(1,candidate.choices.size(),candidate);
 			}else
 				verifiyChoices(1,allocatedChoice,candidate);
-			
+
 		}	
-		
+
 		System.out.println("Verification Done: ");
 	}
 	private void verifiyChoices(int lIndex, int uIndex, Candidate candidate) {
@@ -444,7 +442,7 @@ public class Allocator{
 			courses.get( courseId ).printStatus();
 		}	
 	}
-	
+
 	void printCourseSeatMatrix(){
 		System.out.println("-------------------- Course Seat Matrix -------------------");
 		boolean isFirst = true;
@@ -456,7 +454,7 @@ public class Allocator{
 			courses.get( courseId ).printSeatMatrixStatus();
 		}	
 	}
-	
+
 	void printNotAllocatedCourseStatus(){
 		System.out.println("-------------------- Not Allocated Course Status -------------------");
 		boolean isFirst = true;
@@ -468,7 +466,7 @@ public class Allocator{
 			courses.get( courseId ).printNotAllocatedStatus();;
 		}	
 	}
-	
+
 	void printOpeningClosingRankStatus(){
 		System.out.println("-------------------- Not Allocated Course Status -------------------");
 		boolean isFirst = true;
@@ -482,9 +480,9 @@ public class Allocator{
 	}
 	void printOpeningClosingRankStatus(String applicationId){
 		System.out.println("-------------------- Not Allocated Course Status for "+applicationId+" -------------------");
-		
+
 		Candidate candidateCheck = candidates.stream().filter(candidate ->candidate.applicationId.equals(applicationId)). findFirst().get();
-		
+
 		boolean isFirst = true;
 		for (int i = 1; i <= candidateCheck.choices.size(); i++) {
 			if( isFirst ){
@@ -493,9 +491,9 @@ public class Allocator{
 			}
 			courses.get( candidateCheck.choices.get(i) ).printOpeningClosingRankStatus();
 		}
-		
+
 	}
-	
+
 	void tableView(String round){
 		System.out.println("---------- Allocated ---------");
 		Candidate.printAllocationTableHeader();
@@ -505,7 +503,7 @@ public class Allocator{
 			}
 		}
 	}
-	
+
 	private void printDNBView() {
 
 		System.out.println("---------- printDNBView ---------");
@@ -539,6 +537,7 @@ public class Allocator{
 			String candidateFile = null;
 			String LastRoundFile = null;
 			String round = null;
+			boolean vacancy = false;
 			boolean tableView = false;
 			boolean DNBView = false;
 			boolean courseStatus= false;
@@ -546,7 +545,7 @@ public class Allocator{
 			boolean stats= false;
 			boolean applicantDetail= false;
 			String applicationId = null;
-			
+
 			int i = 0;
 			while( i < args.length ){
 				if( args[i].equals("-c") || args[i].equals("-C") ){
@@ -563,6 +562,8 @@ public class Allocator{
 					i++;
 				}else if( args[i].equals("-tv") || args[i].equals("-tv") ){
 					tableView = true;
+				}else if( args[i].equals("-v") || args[i].equals("-v") ){
+					vacancy = true;
 				}
 				else if( args[i].equals("-dnb") || args[i].equals("-DNB") ){
 					DNBView = true;
@@ -573,7 +574,7 @@ public class Allocator{
 				else if( args[i].equals("-stats") || args[i].equals("-STATS") ){
 					stats = true;
 				}
-				
+
 				else if( args[i].equals("-applicant") || args[i].equals("-APPLICANT") ){
 					applicantDetail= true;
 					applicationId = args[i+1].trim();
@@ -581,116 +582,119 @@ public class Allocator{
 				else if( args[i].equals("-rs") || args[i].equals("-rs") ){
 					remaningSeatMatrix = true;
 				}
-				
-			i++;
+				i++;
 			}			
+
 			if( courseFile == null || candidateFile == null || round == null ){
-				
+
 				System.err.println("Course File , Candidate File and Round value are compulsory to run the program. Please provide the same");
-				
+
 				optionsOfTheProgram();
-				
-				
+
+
 				System.exit(0);
 			}
 
 			Allocator allocator = new Allocator();
 			allocator.readCourses(courseFile, true);
 			allocator.readCandidate(candidateFile, true);
-			
+
+
 			if(LastRoundFile != null)
 			{
 				allocator.lastRound(LastRoundFile,true);
-				
+
 				/*
 				 * Prints the current remaining status of the each course
-				*/
-				if(remaningSeatMatrix)
-				allocator.printCourseSeatMatrix();
+				 */
+				if( remaningSeatMatrix ){
+				    allocator.printCourseSeatMatrix();
+				    System.exit(0);	
+				}	
 			}
-			
-			
+
+
 			allocator.allocate();
 			allocator.allocattionVerification();
-			
+
 			System.out.println("Total Seats: "+totalSeats);
 			System.out.println("Total Allocated: "+allocated);
-			
+
 			//allocator.print();
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
+
+
+
+
 			/*
 			 * Applicant Choices Details View
 			 * Not Allocated Course Status for applicant.
 			 * Prints opening closing of the course he opted.
-			*/
+			 */
 			if(applicantDetail){
 				allocator.printOpeningClosingRankStatus(applicationId);
 			}
-			
-			
-			
+
+
+
 			///////////////////////////////////////////////
 
-			
-			
-			
+
+
+
 			/*
 			 * Opening Closing Rank Details of each course.
-			*/
+			 */
 			if(stats)
 			{
 				allocator.printNotAllocatedCourseStatus();
 				allocator.pritntNotAllocatedCandidates();
 				allocator.printOpeningClosingRankStatus();
 			}
-			
-			
+
+
 			///////////////////////////////////////////////
-			
-			
+
+
 			/*
 			 * Course Status View
 			 * 	Prints status of each course with Quota wise capacity and allocated count.
-			*/
+			 */
 			if(courseStatus)
 			{
 				allocator.printCourseStatus();	
 			}
 			///////////////////////////////////////////////
-			
-			
+
+
 			/*DNB View
 			 * 	Print the DNB specified view of the applicant
 			 * 	It gives all the information about allocated candidate like allocated course, quota etc
-			*/
+			 */
 			if(DNBView)
 			{
 				allocator.printDNBView();
 			}
 			///////////////////////////////////////////////
-			
-			
-			
+
+
+
 			/*Database Table View
 			 *Prints Database table CSV with appropriate status and action id for provided round 
-			*/
+			 */
 			if(tableView)
 			{
 				allocator.tableView( round );
-				
+
 			}
-		
+
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -698,6 +702,7 @@ public class Allocator{
 	}
 
 	public static void optionsOfTheProgram() {
+
 		System.out.println("Following are the options of the Allocation Application : ");
 		System.out.println("-[c,C] <courseFile>  : Course seat matrix file path");
 		System.out.println("-[a,A] <applicantFile> : Applicant data with choices file path");
@@ -709,16 +714,15 @@ public class Allocator{
 		System.out.println("-dnb (DNB-specified view analysis)");
 		System.out.println("-tv (Database Table View analysis)");
 		System.out.println("-applicant <application Id> (Applicant Choices Details View)");
-		
+
 	}
 
 	private void pritntNotAllocatedCandidates() {
-		// TODO Auto-generated method stub
 		for(Candidate candidate: candidates){
 			if(! candidate.isAllocated ){
 				candidate.print();
 			}
 		}
 	}
-	
+
 }

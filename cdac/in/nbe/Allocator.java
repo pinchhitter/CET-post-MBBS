@@ -14,6 +14,8 @@ import java.util.TreeMap;
 public class Allocator{
 
 	List<Candidate> candidates;
+	List<String> specialCat;
+	List<String> mainQuota = new ArrayList<String>();
 	Map<String, Course> courses;
 	Map<String,Course> lastRoundAllocation ;
 	Map<String,Integer> noFoundCourses = new TreeMap<String,Integer>();
@@ -30,8 +32,20 @@ public class Allocator{
 	Allocator(){
 
 		candidates = new ArrayList<Candidate>();
+		specialCat = new ArrayList<String>();
 		courses = new TreeMap<String, Course>();
 		priority = new ArrayList<String>();
+
+		mainQuota.add("UR");
+		mainQuota.add("URWo");
+		mainQuota.add("OBC");
+		mainQuota.add("OBCWo");
+		mainQuota.add("SC");
+		mainQuota.add("SCWo");
+		mainQuota.add("ST");
+		mainQuota.add("STWo");
+		mainQuota.add("PWD");
+		mainQuota.add("PWDWo");
 
 		priority.add("UR");
 		priority.add("URWo");
@@ -69,6 +83,32 @@ public class Allocator{
 		quotaPriority.put("BCBWo", 8);
 
 	}
+
+	void readSpecialCat(String filename, boolean header){
+		if( filename == null)
+		return;
+	
+		BufferedReader br = null; 
+		int count = 0;
+		String line = null;
+
+		try{
+			br = new BufferedReader(new FileReader( new File(filename) ) );
+			while( (line = br.readLine() ) != null ){
+				if( header ){
+					header = false;
+					continue;
+				}
+				count++;
+				specialCat.add( line.trim() );
+				
+			}
+			System.err.println("Total Special Catgeory Candidate: "+(count));
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
 
 	void readCourses(String filename, boolean header){
 
@@ -171,6 +211,10 @@ public class Allocator{
 
 	boolean isValidQuotaAllocation(Quota quota, Candidate candidate){
 
+		if( specialCat.contains( candidate.applicationId ) && ! mainQuota.contains( quota.name ) ){
+			return false;
+		}	
+
 		if( quota == null)
 			return false;
 		if( quota.name.equals("UR") )
@@ -206,14 +250,14 @@ public class Allocator{
 	boolean allocate(Candidate candidate, Course course, Quota quota, Integer number){
 
 
-		if ( isValidQuotaAllocation(  quota, candidate )  &&  quota.allocated < quota.size ){
+		if ( isValidQuotaAllocation( quota, candidate )  &&  quota.allocated < quota.size ){
 
 			if( candidate.isAllocated ){
 
 				int allocatedQuotaPriority = course.getQuotaPriority(candidate.allocatedQuota.name);
 				int newQuotaPriority = course.getQuotaPriority( quota.name );
 
-				if(  (!course.equals(candidate.allocatedCourse) || newQuotaPriority < allocatedQuotaPriority) ){
+				if(  (! course.equals(candidate.allocatedCourse) || newQuotaPriority < allocatedQuotaPriority) ){
 
 					candidate.allocatedQuota.free(candidate);
 					candidate.allocatedCourse.allocated--;
@@ -261,7 +305,9 @@ public class Allocator{
 
 		for(String quota: priority){
 
+
 			if( course.quotas.get( quota ) != null ){
+
 				if ( allocate( candidate, course, course.quotas.get( quota ), number ) ){
 					return true;
 				}
@@ -337,7 +383,9 @@ public class Allocator{
 					header = false;
 					continue;
 				}
+
 				//application_id,seat_allotted,quota,choice_no,round,action_id
+
 				String []token = line.trim().split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
 				String allocatedApplicationId = token[0];
 				String allocatedSeat= token[1];
@@ -348,7 +396,9 @@ public class Allocator{
 					Candidate allocatedCandidate = candidates.stream().filter(candidate ->candidate.applicationId.equals(allocatedApplicationId)). findFirst().get();
 					Course course = courses.get( allocatedSeat );
 					Quota quota = course.quotas.get( allocatedQuota );
-					Integer choiceNo = allocatedCandidate.choices.entrySet().stream().filter(entry -> Objects.equals(entry.getValue(), allocatedSeat)).map(Map.Entry::getKey).findFirst().get();
+
+					Integer choiceNo = allocatedCandidate.choices.entrySet().stream().filter( entry -> Objects.equals(entry.getValue(), allocatedSeat) ).map( Map.Entry::getKey ).findFirst().get();
+
 					allocate(allocatedCandidate,course,quota,choiceNo);
 					allocatedCandidate.setStatusId(4);
 					allocatedCandidate.setActionId(3);
@@ -356,8 +406,9 @@ public class Allocator{
 					count++;
 				}
 				catch(Exception e){
+					
 					e.printStackTrace();
-					System.err.println("Choice not found  "+allocatedApplicationId+":"+allocatedSeat);
+					System.err.println("Choice not found  "+allocatedApplicationId+":"+allocatedSeat+", "+allocatedSeat+", "+allocatedQuota);
 				}
 			}
 			System.out.println("Last Round Allocated "+count);
@@ -372,10 +423,19 @@ public class Allocator{
 		Collections.sort( candidates, new CandidateSort() );
 		boolean allocation= true;
 		int iteration = 0;
-		for (int i = 0; i < candidates.size(); i++) {
 
+		while( allocation ){
 
-			allocate( candidates.get(i) );
+			allocation= false;
+
+			for (int i = 0; i < candidates.size(); i++) {
+
+				if( allocate( candidates.get(i) ) ){
+					 // allocation = true;
+					//  break;
+				}
+			}
+
 		}
 		for(String course: noFoundCourses.keySet() ){
 			System.err.println(course+" <> "+noFoundCourses.get( course ) );
@@ -478,6 +538,7 @@ public class Allocator{
 			courses.get( courseId ).printOpeningClosingRankStatus();
 		}	
 	}
+
 	void printOpeningClosingRankStatus(String applicationId){
 		System.out.println("-------------------- Not Allocated Course Status for "+applicationId+" -------------------");
 
@@ -536,6 +597,8 @@ public class Allocator{
 			String courseFile = null;
 			String candidateFile = null;
 			String LastRoundFile = null;
+
+			String specialCatFile = null;
 			String round = null;
 			boolean vacancy = false;
 			boolean tableView = false;
@@ -551,18 +614,27 @@ public class Allocator{
 				if( args[i].equals("-c") || args[i].equals("-C") ){
 					courseFile = args[i+1].trim();
 					i++;
-				}else if( args[i].equals("-a") || args[i].equals("-A") ){
+				}
+				else if( args[i].equals("-sp") || args[i].equals("-SP") ){
+					specialCatFile = args[i+1].trim();
+					i++;
+				}
+				else if( args[i].equals("-a") || args[i].equals("-A") ){
 					candidateFile = args[i+1].trim();
 					i++;
-				}else if( args[i].equals("-r") || args[i].equals("-R") ){
+				}
+				else if( args[i].equals("-r") || args[i].equals("-R") ){
 					round = args[i+1].trim();
 					i++;
-				}else if( args[i].equals("-lr") || args[i].equals("-LR") ){
+				}
+				else if( args[i].equals("-lr") || args[i].equals("-LR") ){
 					LastRoundFile = args[i+1].trim();
 					i++;
-				}else if( args[i].equals("-tv") || args[i].equals("-tv") ){
+				}
+				else if( args[i].equals("-tv") || args[i].equals("-tv") ){
 					tableView = true;
-				}else if( args[i].equals("-v") || args[i].equals("-v") ){
+				}
+				else if( args[i].equals("-v") || args[i].equals("-v") ){
 					vacancy = true;
 				}
 				else if( args[i].equals("-dnb") || args[i].equals("-DNB") ){
@@ -596,8 +668,9 @@ public class Allocator{
 			}
 
 			Allocator allocator = new Allocator();
-			allocator.readCourses(courseFile, true);
-			allocator.readCandidate(candidateFile, true);
+			allocator.readSpecialCat( specialCatFile, true)	;
+			allocator.readCourses( courseFile, true);
+			allocator.readCandidate( candidateFile, true);
 
 
 			if(LastRoundFile != null)
@@ -704,6 +777,7 @@ public class Allocator{
 	public static void optionsOfTheProgram() {
 
 		System.out.println("Following are the options of the Allocation Application : ");
+		System.out.println("-[sp,SP] <specialCatgeoryFile>  : Candidate who will be not be consider for allocation in Special Category");
 		System.out.println("-[c,C] <courseFile>  : Course seat matrix file path");
 		System.out.println("-[a,A] <applicantFile> : Applicant data with choices file path");
 		System.out.println("-r [roundVal] : round value");
